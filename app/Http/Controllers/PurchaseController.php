@@ -36,11 +36,11 @@ class PurchaseController extends Controller
             }
 
             $purchaseService = PurchaseServiceFactory::get($account->getAttribute('operation_system'));
-
+            $receipt = $all['receipt'];
             $purchaseResponse = $purchaseService->check($all['receipt']);
             (new PurchaseRepository())->insert($all, $account->getAttribute('id'), $purchaseResponse);
             if ($purchaseResponse->getStatusCode() === 200) {
-                $subscription = (new SubscriptionRepository())->upInsert($account->getAttribute('id'));
+                $subscription = (new SubscriptionRepository())->upInsert($account->getAttribute('id'), $receipt);
                 return response()->json([
                     'status' => true,
                     'expireDate' => $subscription->getAttribute('expire_date'),

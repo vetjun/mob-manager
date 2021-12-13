@@ -17,7 +17,9 @@ class CreateSubscriptionsTable extends Migration
             $table->id();
             $table->boolean('is_canceled')->default(false);
             $table->dateTime('expire_date');
+            $table->string('receipt');
             $table->index('expire_date');
+            $table->fulltext('receipt');
             $table->foreignId('account_id');
             $table->timestamps();
             $table->foreign('account_id')->references('id')->on('accounts')->cascadeOnDelete();
