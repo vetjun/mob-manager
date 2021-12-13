@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Device;
-use App\Models\Repositories\DeviceRepository;
+use App\Exceptions\AccountNotFound;
+use App\Models\Account;
+use App\Models\Repositories\AccountRepository;
 use App\Models\Repositories\PurchaseRepository;
+use App\Models\Repositories\SubscriptionRepository;
 use App\Services\Purchase\PurchaseServiceFactory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -27,17 +29,28 @@ class PurchaseController extends Controller
             ];
         }
         try {
-            /** @var Device $device */
-            $device = (new DeviceRepository())->getByClientToken($all['client_token']);
+            /** @var Account $account */
+            $account = (new AccountRepository())->getByClientToken($all['client_token']);
+            if (empty($account)) {
+                throw new AccountNotFound('Account Not Found By Client Token');
+            }
 
-            $purchaseService = PurchaseServiceFactory::get($device->getAttribute('operation_system'));
-            $checkResponse = $purchaseService->check($all['receipt']);
-            $purchase = (new PurchaseRepository())->insert($all, $device->getAttribute('id'), $checkResponse);
-            if ($checkResponse === true) {
+            $purchaseService = PurchaseServiceFactory::get($account->getAttribute('operation_system'));
+
+            $purchaseResponse = $purchaseService->check($all['receipt']);
+            (new PurchaseRepository())->insert($all, $account->getAttribute('id'), $purchaseResponse);
+            if ($purchaseResponse->getStatusCode() === 200) {
+                $subscription = (new SubscriptionRepository())->upInsert($account->getAttribute('id'));
                 return response()->json([
                     'status' => true,
-                    'expireDate' => $purchase->getAttribute('expire_date'),
-                ], 200);
+                    'expireDate' => $subscription->getAttribute('expire_date'),
+                ]);
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Purchase Request Could Not Been Approved',
+                    'error_code' => $purchaseResponse->getErrorCode()
+                ], 500);
             }
         } catch (\Exception $exception) {
             return [
@@ -45,10 +58,5 @@ class PurchaseController extends Controller
                 'message' => $exception->getMessage()
             ];
         }
-
-        return response()->json([
-            'status' => false,
-            'message' => 'Purchase Operation Failed',
-        ], 500);
     }
 }

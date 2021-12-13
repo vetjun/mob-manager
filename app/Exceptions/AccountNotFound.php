@@ -4,7 +4,7 @@
 namespace App\Exceptions;
 
 
-class DeviceNotFound extends \Exception
+class AccountNotFound extends \Exception
 {
 
 }

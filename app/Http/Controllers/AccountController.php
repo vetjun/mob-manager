@@ -4,12 +4,12 @@
 namespace App\Http\Controllers;
 
 
-use App\Models\Device;
-use App\Models\Repositories\DeviceRepository;
+use App\Models\Account;
+use App\Models\Repositories\AccountRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
-class DeviceController
+class AccountController
 {
     public function register(Request $request)
     {
@@ -36,12 +36,12 @@ class DeviceController
           'operation_system' => $all['operation_system'],
         ];
         try {
-            /** @var Device $device */
-            $device = (new DeviceRepository())->insert($params);
+            /** @var Account $account */
+            $account = (new AccountRepository())->insert($params);
             return response()->json([
                 'success' => true,
-                'status' => $device->getAttribute('status') ?? null,
-                'client_token' => $device->getAttribute('client_token') ?? null,
+                'status' => $account->getAttribute('status') ?? null,
+                'client_token' => $account->getAttribute('client_token') ?? null,
             ], 200);
         } catch (\Exception $exception) {
             return response()->json([

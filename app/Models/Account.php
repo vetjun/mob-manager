@@ -6,7 +6,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Device extends Model
+class Account extends Model
 {
-    protected $table = 'devices';
+    protected $table = 'accounts';
 }
