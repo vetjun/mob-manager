@@ -9,7 +9,6 @@ use App\Models\Subscription;
 use DateInterval;
 use DateTime;
 use DateTimeZone;
-use Illuminate\Support\Facades\DB;
 
 class SubscriptionRepository
 {
@@ -17,7 +16,7 @@ class SubscriptionRepository
     public function upInsert($account_id, $receipt)
     {
         $expireDate = $this->getExpireDate();
-        $subscription = Subscription::query()->firstOrCreate(
+        $subscription = Subscription::query()->firstOrNew(
             ['account_id' => $account_id],
             [
                 'receipt' => $receipt,
@@ -25,6 +24,10 @@ class SubscriptionRepository
                 'is_canceled' => false
             ]
         );
+        if (!empty($subscription->getAttribute('id'))) {
+            $subscription->setAttribute('is_renewed', true);
+        }
+        $subscription->save();
 
         return $subscription;
     }
@@ -32,21 +35,21 @@ class SubscriptionRepository
     public function bulkUpInsert(array $params)
     {
         $expireDate = $this->getExpireDate();
-        DB::beginTransaction();
+        $records = [];
         foreach ($params as $param) {
+            $id = $param['id'];
             $accountId = $param['account_id'];
             $receipt = $param['receipt'];
-            Subscription::query()->updateOrInsert([
-                ['account_id' => $accountId],
-                [
-                    'account_id' => $accountId,
-                    'receipt' => $receipt,
-                    'expire_date' => $expireDate,
-                    'is_canceled' => false
-                ]
-            ]);
+            $records[] = [
+                'id' => $id,
+                'account_id' => $accountId,
+                'receipt' => $receipt,
+                'expire_date' => $expireDate,
+                'is_canceled' => false,
+                'is_renewed' => true
+            ];
         }
-        DB::commit();
+        Subscription::query()->upsert($records, ['id'], ['receipt', 'expire_date', 'is_canceled', 'is_renewed']);
     }
 
     private function getExpireDate()
@@ -121,7 +124,7 @@ class SubscriptionRepository
     public function getRenewPayloadByIds(array $subscriptionIds)
     {
         $subscriptionPayload = Subscription::query()
-            ->select(['subscriptions.*', 'accounts.operation_system'])
+            ->select(['subscriptions.*', 'accounts.operation_system', 'accounts.app_id'])
             ->whereIn('id', $subscriptionIds)
             ->join('accounts', 'accounts.id', '=', 'subscriptions.account_id')
             ->get();

@@ -52,10 +52,12 @@ class RenewSubscriptions implements ShouldQueue
             $subscriptionAccountIdsToUpInsert = [];
             foreach ($chunkedRecords as $chunkedRecord) {
                 try {
+                    $id = $chunkedRecord['id'];
+                    $appId = $chunkedRecord['app_id'];
                     $provider = $chunkedRecord['operation_system'];
                     $receipt = $chunkedRecord['receipt'];
                     $accountId = $chunkedRecord['account_id'];
-                    $purchaseService = PurchaseServiceFactory::get($provider);
+                    $purchaseService = PurchaseServiceFactory::get($provider, $appId);
                     $response = $purchaseService->check($receipt);
                     $purchaseResponses[] = [
                         'response' => $response,
@@ -66,6 +68,7 @@ class RenewSubscriptions implements ShouldQueue
                     ];
                     if ($response->getStatusCode() === 200) {
                         $subscriptionAccountIdsToUpInsert[] = [
+                            'id' => $id,
                             'account_id' => $accountId,
                             'receipt' => $receipt,
                         ];

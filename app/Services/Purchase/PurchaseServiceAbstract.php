@@ -5,11 +5,26 @@ namespace App\Services\Purchase;
 
 
 use App\Responses\PurchaseResponse;
+use GuzzleHttp\Psr7\Request;
+use Http\Mock\Client;
 
 abstract class PurchaseServiceAbstract implements PurchaseServiceInterface
 {
+    public $credential = [];
     public function check($receipt): PurchaseResponse
     {
+        // Mock Client
+        $client = new Client();
+
+        $username = $this->credential['username'] ?? '';
+        $password = $this->credential['password'] ?? '';
+        $credentials = base64_encode($username . ':' . $password);
+        $firstRequest = new Request('POST', 'mock.api',
+            [
+                'Authorization' => 'Basic ' . $credentials,
+            ], json_encode(['receipt' => $receipt]));
+        $client->sendRequest($firstRequest);
+
         $response = new PurchaseResponse();
         $receiptInt = (int)$receipt;
         $remain = $receiptInt % 100;
@@ -39,5 +54,9 @@ abstract class PurchaseServiceAbstract implements PurchaseServiceInterface
             'message' => 'Successfully Has Been Approved'
         ]);
         return $response;
+    }
+    public function setCredential($credential)
+    {
+        $this->credential = $credential;
     }
 }

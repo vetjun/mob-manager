@@ -23,7 +23,7 @@ class PurchaseController extends Controller
             /** @var Account $account */
             $account = (new AccountRepository())->getByClientToken($all['client_token']);
 
-            $purchaseService = PurchaseServiceFactory::get($account->getAttribute('operation_system'));
+            $purchaseService = PurchaseServiceFactory::get($account->getAttribute('operation_system'), $account->getAttribute('app_id'));
             $receipt = $all['receipt'];
             $purchaseResponse = $purchaseService->check($all['receipt']);
             (new PurchaseRepository())->insert($all, $account->getAttribute('id'), $purchaseResponse);
