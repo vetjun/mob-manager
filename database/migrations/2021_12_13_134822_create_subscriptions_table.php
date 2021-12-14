@@ -17,11 +17,12 @@ class CreateSubscriptionsTable extends Migration
             $table->id();
             $table->boolean('is_canceled')->default(false);
             $table->dateTime('expire_date');
-            $table->string('receipt');
+            $table->string('receipt')->nullable();
             $table->index('expire_date');
             $table->fulltext('receipt');
             $table->foreignId('account_id');
-            $table->timestamps();
+            $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
             $table->foreign('account_id')->references('id')->on('accounts')->cascadeOnDelete();
         });
     }

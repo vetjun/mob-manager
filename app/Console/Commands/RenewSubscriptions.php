@@ -39,7 +39,7 @@ class RenewSubscriptions extends Command
      *
      * @return int
      */
-    public function handle()
+    public function handle(): int
     {
         $toRenewLazyRecordIds = (new SubscriptionRepository())->getToRenewLazy();
         foreach ($toRenewLazyRecordIds as $index => $renewLazyRecordIds) {

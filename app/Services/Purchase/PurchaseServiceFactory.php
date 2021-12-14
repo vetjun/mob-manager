@@ -8,7 +8,7 @@ use App\Exceptions\PurchaseServiceProviderNotFound;
 
 class PurchaseServiceFactory
 {
-    private $providerObjs = [];
+    private static $providerObjs = [];
     /**
      * @param $provider
      * @return PurchaseServiceInterface
@@ -17,13 +17,13 @@ class PurchaseServiceFactory
     public static function get($provider)
     {
         $providerClassName = 'App\\Services\\Purchase\\Providers\\' . ucfirst($provider);
-        if (!empty($providerObjs[$providerClassName])) {
-            return $providerObjs[$providerClassName];
+        if (!empty(self::$providerObjs[$providerClassName])) {
+            return self::$providerObjs[$providerClassName];
         }
         if (!class_exists($providerClassName)) {
             throw new PurchaseServiceProviderNotFound('Service Provider Not Found To ' . $provider);
         }
-        $providerObjs[$providerClassName] = new $providerClassName();
-        return $providerObjs[$providerClassName];
+        self::$providerObjs[$providerClassName] = new $providerClassName();
+        return self::$providerObjs[$providerClassName];
     }
 }

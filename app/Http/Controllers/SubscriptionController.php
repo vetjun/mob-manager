@@ -2,36 +2,24 @@
 
 namespace App\Http\Controllers;
 
-use App\Exceptions\AccountNotFound;
 use App\Models\Account;
 use App\Models\Repositories\AccountRepository;
 use App\Models\Repositories\SubscriptionRepository;
+use App\Utils\Traits\ValidationTrait;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 
 class SubscriptionController extends Controller
 {
+    use ValidationTrait;
+
     public function get(Request $request)
     {
-        $all = $request->all();
-        $validation = Validator::make($all,
-            [
-                'client_token' => 'required'
-            ]
-        );
-        if ($validation->fails()) {
-            return [
-                'success' => false,
-                'message' => implode('||', $validation->getMessageBag()->all())
-            ];
-        }
         try {
+            $this->validateRequest($request);
+            $all = $request->all();
+
             /** @var Account $account */
             $account = (new AccountRepository())->getByClientToken($all['client_token']);
-
-            if (empty($account)) {
-                throw new AccountNotFound('Account Not Found By Client Token');
-            }
 
             $subscription = (new SubscriptionRepository())->getByAccount($account);
             return [
@@ -48,25 +36,12 @@ class SubscriptionController extends Controller
 
     public function cancel(Request $request)
     {
-        $all = $request->all();
-        $validation = Validator::make($all,
-            [
-                'client_token' => 'required'
-            ]
-        );
-        if ($validation->fails()) {
-            return [
-                'success' => false,
-                'message' => implode('||', $validation->getMessageBag()->all())
-            ];
-        }
         try {
+            $this->validateRequest($request);
+            $all = $request->all();
+
             /** @var Account $account */
             $account = (new AccountRepository())->getByClientToken($all['client_token']);
-
-            if (empty($account)) {
-                throw new AccountNotFound('Account Not Found By Client Token');
-            }
 
             (new SubscriptionRepository())->cancelByAccount($account);
             return [
@@ -79,5 +54,12 @@ class SubscriptionController extends Controller
                 'message' => $exception->getMessage()
             ];
         }
+    }
+
+    public function getValidationRules()
+    {
+        return [
+            'client_token' => 'required'
+        ];
     }
 }

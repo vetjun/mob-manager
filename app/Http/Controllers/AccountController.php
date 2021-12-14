@@ -6,36 +6,24 @@ namespace App\Http\Controllers;
 
 use App\Models\Account;
 use App\Models\Repositories\AccountRepository;
+use App\Utils\Traits\ValidationTrait;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 
 class AccountController
 {
+    use ValidationTrait;
+
     public function register(Request $request)
     {
-        $all = $request->all();
-        $validation = Validator::make($all,
-            [
-                'device_uid' => 'required',
-                'app_id' => 'required',
-                'operation_system' => 'required',
-                'language' => 'nullable',
-            ]
-        );
-        if ($validation->fails()) {
-            return [
-                'success' => false,
-                'message' => implode('||', $validation->getMessageBag()->all())
-            ];
-        }
-
-        $params = [
-          'device_uid' => $all['device_uid'],
-          'app_id' => $all['app_id'],
-          'language' => $all['language'] ?? 'EN',
-          'operation_system' => $all['operation_system'],
-        ];
         try {
+            $this->validateRequest($request);
+            $all = $request->all();
+            $params = [
+                'device_uid' => $all['device_uid'],
+                'app_id' => $all['app_id'],
+                'language' => $all['language'] ?? 'EN',
+                'operation_system' => $all['operation_system'],
+            ];
             /** @var Account $account */
             $account = (new AccountRepository())->insert($params);
             return response()->json([
@@ -50,5 +38,15 @@ class AccountController
             ], 500);
         }
 
+    }
+
+    public function getValidationRules()
+    {
+        return [
+            'device_uid' => 'required',
+            'app_id' => 'required',
+            'operation_system' => 'required',
+            'language' => 'nullable',
+        ];
     }
 }

@@ -2,38 +2,26 @@
 
 namespace App\Http\Controllers;
 
-use App\Exceptions\AccountNotFound;
 use App\Models\Account;
 use App\Models\Repositories\AccountRepository;
 use App\Models\Repositories\PurchaseRepository;
 use App\Models\Repositories\SubscriptionRepository;
 use App\Services\Purchase\PurchaseServiceFactory;
+use App\Utils\Traits\ValidationTrait;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 
 class PurchaseController extends Controller
 {
+    use ValidationTrait;
+
     public function purchase(Request $request)
     {
-        $all = $request->all();
-        $validation = Validator::make($all,
-            [
-                'client_token' => 'required',
-                'receipt' => 'required'
-            ]
-        );
-        if ($validation->fails()) {
-            return [
-                'success' => false,
-                'message' => implode('||', $validation->getMessageBag()->all())
-            ];
-        }
         try {
+            $this->validateRequest($request);
+            $all = $request->all();
+
             /** @var Account $account */
             $account = (new AccountRepository())->getByClientToken($all['client_token']);
-            if (empty($account)) {
-                throw new AccountNotFound('Account Not Found By Client Token');
-            }
 
             $purchaseService = PurchaseServiceFactory::get($account->getAttribute('operation_system'));
             $receipt = $all['receipt'];

@@ -18,13 +18,14 @@ class CreateAccountsTable extends Migration
             $table->id();
             $table->string('device_uid');
             $table->string('app_id');
-            $table->string('language');
+            $table->string('language')->nullable();
             $table->string('operation_system');
             $table->index('language');
             $table->index('operation_system');
             $table->string('client_token')->unique();
             $table->unique(array('device_uid', 'app_id'));
-            $table->timestamps();
+            $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
         });
     }
 

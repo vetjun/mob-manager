@@ -5,7 +5,6 @@ namespace App\Models\Repositories;
 
 
 use App\Exceptions\AccountNotFound;
-use App\Exceptions\DeviceNotFound;
 use App\Helper\ClientTokenManager;
 use App\Models\Account;
 
@@ -52,14 +51,5 @@ class AccountRepository
             throw new AccountNotFound('Account not found by client_token');
         }
         return $accountObj;
-    }
-
-    public function getDeviceAppsByClientToken($client_token)
-    {
-        $account = $this->getByClientToken($client_token);
-        $accounts = Account::query()->where('device_uid', $account->getAttribute('device_uid'))
-            ->get()->toArray();
-
-        return $accounts;
     }
 }

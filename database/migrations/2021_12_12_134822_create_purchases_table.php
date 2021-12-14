@@ -15,16 +15,16 @@ class CreatePurchasesTable extends Migration
     {
         Schema::create('purchases', function (Blueprint $table) {
             $table->id();
-            $table->string('request');
-            $table->string('response');
-            $table->string('error_code');
-            $table->string('is_success');
-            $table->dateTime('expire_date');
+            $table->string('request')->nullable();
+            $table->string('response')->nullable();
+            $table->string('error_code')->nullable();
+            $table->string('is_success')->default(false);
             $table->foreignId('account_id');
             $table->fulltext('error_code');
             $table->fulltext('response');
             $table->fulltext('request');
-            $table->timestamps();
+            $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
             $table->foreign('account_id')->references('id')->on('accounts')->cascadeOnDelete();
         });
     }

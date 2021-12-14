@@ -14,18 +14,17 @@ use Illuminate\Support\Facades\DB;
 class SubscriptionRepository
 {
     private $limitToRenewLazy = 1000;
-    public function upInsert(string $account_id, $receipt)
+    public function upInsert($account_id, $receipt)
     {
         $expireDate = $this->getExpireDate();
-        $subscription = Subscription::query()->firstOrCreate([
+        $subscription = Subscription::query()->firstOrCreate(
             ['account_id' => $account_id],
             [
-                'account_id' => $account_id,
                 'receipt' => $receipt,
                 'expire_date' => $expireDate,
                 'is_canceled' => false
             ]
-        ]);
+        );
 
         return $subscription;
     }
@@ -54,17 +53,19 @@ class SubscriptionRepository
     {
         $today = new DateTime();
         $oneYearFromToday = $today->add(DateInterval::createFromDateString('1 years'));
-        $tz = new DateTimeZone('Etc/GMT+6');
+        $tz = new DateTimeZone(config('mob.timezone'));
         $oneYearFromToday->setTimeZone($tz);
         return $oneYearFromToday->format('Y-m-d H:i:s');
     }
 
     public function getByAccount(Account $account)
     {
-        return Subscription::query()
+        $subscription = Subscription::query()
             ->where('account_id', $account->getAttribute('id'))
             ->where('is_canceled', false)
-            ->first()->toArray();
+            ->first();
+
+        return (!empty($subscription)) ? $subscription->toArray() : [];
     }
 
     public function cancelByAccount(Account $account)
@@ -72,15 +73,19 @@ class SubscriptionRepository
         Subscription::query()
             ->where('account_id', $account->getAttribute('id'))
             ->where('is_canceled', false)
-            ->delete();
+            ->update([
+                'is_canceled' => true
+            ]);
     }
 
     public function getToRenew()
     {
-        return Subscription::query()
+        $subscriptions =  Subscription::query()
             ->whereRaw('expire_date >= now()')
             ->where('is_canceled', false)
-            ->get()->toArray();
+            ->get();
+
+        return (!empty($subscriptions)) ? $subscriptions->toArray() : [];
     }
 
     public function getToRenewLazy(): \Generator
@@ -93,7 +98,8 @@ class SubscriptionRepository
                 ->whereRaw('expire_date >= now()')
                 ->where('is_canceled', false)
                 ->take($this->limitToRenewLazy)->skip($page * $this->limitToRenewLazy)
-                ->get()->toArray();
+                ->get();
+            $results = (!empty($results)) ? $results->toArray() : [];
             if (empty($results)) {
                 break;
             }
@@ -105,17 +111,21 @@ class SubscriptionRepository
 
     public function getByIds(array $subscriptionIds)
     {
-        return Subscription::query()
+        $subscription = Subscription::query()
             ->whereIn('id', $subscriptionIds)
-            ->get()->toArray();
+            ->get();
+
+        return (!empty($subscription)) ? $subscription->toArray() : [];
     }
 
     public function getRenewPayloadByIds(array $subscriptionIds)
     {
-        return Subscription::query()
+        $subscriptionPayload = Subscription::query()
             ->select(['subscriptions.*', 'accounts.operation_system'])
             ->whereIn('id', $subscriptionIds)
             ->join('accounts', 'accounts.id', '=', 'subscriptions.account_id')
-            ->get()->toArray();
+            ->get();
+
+        return (!empty($subscriptionPayload)) ? $subscriptionPayload->toArray() : [];
     }
 }

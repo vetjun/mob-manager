@@ -7,7 +7,6 @@ namespace App\Models\Repositories;
 use App\Models\Purchase;
 use App\Responses\PurchaseResponse;
 use DateTime;
-use Illuminate\Database\Eloquent\Model;
 
 class PurchaseRepository
 {
