@@ -128,3 +128,5 @@ php artisan queue:work --queue=renew_subscriptions_2
 `
 php artisan queue:work --queue=renew_subscriptions_3
 `
+
+Database schema file -> mysql-schema.dump
