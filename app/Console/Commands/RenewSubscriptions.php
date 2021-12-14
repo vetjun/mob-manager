@@ -13,7 +13,7 @@ class RenewSubscriptions extends Command
      *
      * @var string
      */
-    protected $signature = 'subscriptions:renew';
+    protected $signature = 'subscriptions:renew {--loadBalanceQueueSize=1}';
 
     /**
      * The console command description.
@@ -41,13 +41,20 @@ class RenewSubscriptions extends Command
      */
     public function handle(): int
     {
+        $this->loadBalanceQueueSize = $this->option('loadBalanceQueueSize') ?? 1;
         $toRenewLazyRecordIds = (new SubscriptionRepository())->getToRenewLazy();
-        foreach ($toRenewLazyRecordIds as $index => $renewLazyRecordIds) {
-            $queueName = ($this->loadBalanceQueueSize > 1) ? QueueManager::RENEW_SUBSCRIPTION . '_' . ($index % $this->loadBalanceQueueSize) : QueueManager::RENEW_SUBSCRIPTION . '_0';
-            $recordIds = array_column($renewLazyRecordIds, 'id');
-            $renewSubscription = new \App\Jobs\RenewSubscriptions($recordIds);
-            \App\Jobs\RenewSubscriptions::dispatch($renewSubscription)->onQueue($queueName);
+        try {
+            foreach ($toRenewLazyRecordIds as $index => $renewLazyRecordIds) {
+                $queueName = ($this->loadBalanceQueueSize > 1) ? QueueManager::RENEW_SUBSCRIPTION . '_' . ($index % $this->loadBalanceQueueSize) : QueueManager::RENEW_SUBSCRIPTION . '_0';
+                $recordIds = array_column($renewLazyRecordIds, 'id');
+                $renewSubscription = new \App\Jobs\RenewSubscriptions($recordIds);
+                \App\Jobs\RenewSubscriptions::dispatch($renewSubscription)->onQueue($queueName);
+            }
+        } catch (\Exception $exception) {
+            logger()->error($exception->getMessage());
+            return Command::FAILURE;
         }
+
         return Command::SUCCESS;
     }
 }
