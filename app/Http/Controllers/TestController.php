@@ -23,4 +23,40 @@ class TestController
 
         ]);
     }
+
+    public function getCustomers()
+    {
+        return response()->json([
+            [
+                'Name' => 'aaa',
+                'Surname' => 'bbb',
+                'Phone' => '+905070937290',
+            ],
+            [
+                'Name' => 'zzz',
+                'Surname' => 'zzz',
+                'Phone' => '+905070937290',
+            ],
+            [
+                'Name' => 'fff',
+                'Surname' => 'fff',
+                'Phone' => '+905070937290',
+            ],
+            [
+                'Name' => 'kkk',
+                'Surname' => 'kkk',
+                'Phone' => '+905070937290',
+            ],
+            [
+                'Name' => 'lll',
+                'Surname' => 'mmm',
+                'Phone' => '+905070937290',
+            ],
+            [
+                'Name' => 'nnn',
+                'Surname' => 'nnn',
+                'Phone' => '+905070937290',
+            ],
+        ]);
+    }
 }

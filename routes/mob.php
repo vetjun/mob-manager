@@ -15,5 +15,6 @@ Route::any('/cancel', [SubscriptionController::class, 'cancel']);
 Route::any('/credential', [CredentialController::class, 'create']);
 Route::any('/application', [ApplicationController::class, 'create']);
 Route::any('/test', [\App\Http\Controllers\TestController::class, 'test']);
+Route::any('/test/customer', [\App\Http\Controllers\TestController::class, 'getCustomers']);
 Route::any('/login', [LoginController::class, 'login']);
 Route::any('/me', [LoginController::class, 'me'])->middleware('jwt.auth');
